@@ -31,23 +31,23 @@ func build(ctx context.Context) error {
 
 	src := client.Host().Directory(".")
 
+	// create the container with the latest golang image
 	golang := client.Container().From("golang:latest")
-	golang = golang.WithEnvVariable("GOPRIVATE", "github.com/b-nova")
+
+	// set the src dir in the container to the host path
 	golang = golang.WithDirectory("/src", src).WithWorkdir("/src")
-	githubUser, _ := client.Host().EnvVariable("GOLANG_GITHUB_USERNAME").Value(ctx)
-	githubToken, _ := client.Host().EnvVariable("GOLANG_GITHUB_ACCESS_TOKEN").Value(ctx)
+
 	// define the application build command
 	path := "./"
-	golang = golang.WithExec([]string{"sed", "-i", "s|replace|// replace|", "go.mod"})
-	golang = golang.WithExec([]string{"git", "config", "--global", "url.https://" + githubUser + ":" + githubToken + "@github.com.insteadOf", "https://github.com"})
 	golang = golang.WithExec([]string{"go", "build", "-o", path})
-	golang = golang.WithExec([]string{"sed", "-i", "s|// replace|replace|", "go.mod"})
 
-	// get reference to build output directory in container
-	output := golang.Directory(path)
+	// get reference to executable file in container
+	outputFileName := "dagger-techup"
+	outputFile := golang.File(outputFileName)
 
-	// write contents of container build/ directory to the host
-	_, err = output.Export(ctx, path)
+	// write executable file from container to the host build/ directory in the current project
+	outputDir := "./build/" + outputFileName
+	_, err = outputFile.Export(ctx, outputDir)
 	if err != nil {
 		return err
 	}
