@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-
+	// import the dagger SDK
 	"dagger.io/dagger"
 )
 
@@ -18,17 +18,12 @@ func build(ctx context.Context) error {
 	fmt.Println("Building with Dagger")
 
 	// initialize Dagger client
-	client, err := dagger.Connect(ctx, dagger.WithLogOutput(os.Stdout))
-	if err != nil {
-		return err
-	}
+	client, _ := dagger.Connect(ctx, dagger.WithLogOutput(os.Stdout))
 	defer func(client *dagger.Client) {
-		err := client.Close()
-		if err != nil {
-
-		}
+		client.Close()
 	}(client)
 
+	// this is the src directory where the code resides
 	src := client.Host().Directory(".")
 
 	// create the container with the latest golang image
@@ -47,10 +42,7 @@ func build(ctx context.Context) error {
 
 	// write executable file from container to the host build/ directory in the current project
 	outputDir := "./build/" + outputFileName
-	_, err = outputFile.Export(ctx, outputDir)
-	if err != nil {
-		return err
-	}
+	outputFile.Export(ctx, outputDir)
 
 	return nil
 }

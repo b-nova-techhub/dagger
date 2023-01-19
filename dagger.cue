@@ -1,4 +1,4 @@
-package gl_betty_bonus_checker
+package dagger
 
 import (
 	"dagger.io/dagger"
@@ -8,6 +8,7 @@ import (
 )
 
 dagger.#Plan & {
+	client: filesystem: "./build": write: contents: actions.build.build.output
 	actions: {
 		source: core.#Source & {
 			path: "."
@@ -20,17 +21,15 @@ dagger.#Plan & {
 		}
 
 		build: {
-			getCode: core.#Source & {
-				path: "."
-			}
+			name: "build"
 
 			test: go.#Test & {
-				source:  getCode.output
+				source:  actions.source.output
 				package: "./..."
 			}
 
-			goBuild: go.#Build & {
-				source: getCode.output
+			build: go.#Build & {
+				source: actions.source.output
 			}
 		}
 	}
